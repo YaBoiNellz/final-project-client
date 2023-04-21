@@ -7,26 +7,51 @@ If needed, it also defines the component's "connect" function.
 ================================================== */
 import Header from './Header';
 import React, { Component } from "react";
+import { Redirect } from 'react-router-dom';
 import { connect } from "react-redux";
-import { fetchStudentThunk } from "../../store/thunks";
+import { fetchStudentThunk, deleteStudentThunk } from "../../store/thunks";
 import { StudentView } from "../views";
 
 class StudentContainer extends Component {
+  // Initialize state
+  constructor(props){
+    super(props);
+    this.state = {
+      redirect: false, 
+    };
+  }
   // Get student data from back-end database
   componentDidMount() {
     //getting student ID from url
     this.props.fetchStudent(this.props.match.params.id);
   }
 
+  // handle when delete button is clicked
+  handleDelete = (studentId) => {
+    this.props.deleteStudent(studentId)
+    .then(() => {
+      this.setState({
+        redirect: true,
+      })
+    });
+  }
+
   // Render Student view by passing student data as props to the corresponding View component
   render() {
+    if(this.state.redirect){
+      return (<Redirect to={`/students`}/>)
+    }
+
     return (
       <div>
         <Header />
-        <StudentView student={this.props.student} />
+        <StudentView 
+        student={this.props.student}
+        handleDelete={this.handleDelete} />
       </div>
     );
   }
+
 }
 
 // The following 2 input arguments are passed to the "connect" function used by "StudentContainer" to connect to Redux Store.  
@@ -41,6 +66,7 @@ const mapState = (state) => {
 const mapDispatch = (dispatch) => {
   return {
     fetchStudent: (id) => dispatch(fetchStudentThunk(id)),
+    deleteStudent: (studentId) => dispatch(deleteStudentThunk(studentId)),
   };
 };
 
